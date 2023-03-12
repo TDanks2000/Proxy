@@ -1,6 +1,5 @@
-import http from "http";
 import { Router } from "express";
-import { headers, utils } from "../../utils";
+import { headers, request, utils } from "../../utils";
 const querystring = require("querystring");
 
 const router = Router();
@@ -19,39 +18,20 @@ router.get("/*", async (req, res) => {
   const url = new URL(params);
   url.search = new URLSearchParams(query).toString();
 
-  // set headers from url
-  const options = {
-    method: req.method,
-    hostname: url.hostname,
-    path: url.pathname + url.search,
-    headers: {
-      Host: req.headers.host,
-    },
-  };
-
-  const proxy = await http.request(url, (r) => {
-    utils.removeCorsHeaders(r.headers);
-
-    res.writeHead(r.statusCode as number, {
-      ...r.headers,
-      host: req.headers.host,
+  const proxyReq = request.requestHttp(url, (proxyRes: any) => {
+    utils.removeCorsHeaders(proxyRes.headers);
+    res.writeHead(proxyRes.statusCode as number, {
+      ...proxyRes.headers,
+      "access-control-allow-origin": "*",
+      "access-control-allow-headers": "*",
+      "access-control-allow-methods": "*",
     });
-
-    r.pipe(res, {
-      end: true,
-    });
+    proxyRes.pipe(res, { end: true });
   });
 
-  res.setHeader("access-control-allow-origin", "*");
-  res.setHeader("access-control-allow-headers", "*");
-  res.setHeader("access-control-allow-methods", "*");
+  req.pipe(proxyReq, { end: true });
 
-  // send back the response
-  req.pipe(proxy, {
-    end: true,
-  });
-
-  proxy.on("error", (err) => {
+  proxyReq.on("error", (err) => {
     console.error(err);
     res.status(500).send("Something broke!");
   });
