@@ -1,6 +1,5 @@
 import { Router } from "express";
-import { headers, request, utils } from "../../utils";
-const querystring = require("querystring");
+import { request, utils } from "../../utils";
 
 const router = Router();
 
@@ -33,6 +32,9 @@ router.get("/*", async (req, res) => {
 
   const proxyReq = request.requestHttp(options, (proxyRes: any) => {
     utils.removeCorsHeaders(proxyRes.headers);
+
+    delete proxyRes.headers["content-security-policy"];
+    delete proxyRes.headers["content-security-policy-report-only"];
 
     res.writeHead(proxyRes.statusCode as number, {
       ...proxyRes.headers,
