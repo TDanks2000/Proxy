@@ -15,9 +15,14 @@ const PORT = Number(process.env.PORT) || 4001;
 
     app.use("/proxy", routes);
 
-    http.createServer(app).listen(PORT, () => {
-      console.log(`🚀 server listening on localhost:${PORT}`);
-    });
+    http
+      .createServer(app)
+      .listen(PORT, () => {
+        console.log(`🚀 server listening on localhost:${PORT}`);
+      })
+      .on("connection", (socket) => {
+        socket.setNoDelay(true);
+      });
   } catch (err) {
     console.error(err);
   }
