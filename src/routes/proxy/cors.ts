@@ -8,7 +8,7 @@ router.get("/*", async (req, res) => {
   const params = (req.params as any)[0];
   const query = req.query as any;
 
-  const referer = query.referer,
+  const referer = query.referer || req.headers.referer,
     headers = query.headers;
   if (query.referer) delete query.referer;
 
@@ -18,14 +18,29 @@ router.get("/*", async (req, res) => {
   const url = new URL(params);
   url.search = new URLSearchParams(query).toString();
 
-  const proxyReq = request.requestHttp(url, (proxyRes: any) => {
+  const options = {
+    protocol: url.protocol,
+    hostname: url.hostname,
+    path: url.pathname + url.search,
+    method: req.method,
+    headers: {},
+  };
+
+  if (referer)
+    options.headers = {
+      referer,
+    };
+
+  const proxyReq = request.requestHttp(options, (proxyRes: any) => {
     utils.removeCorsHeaders(proxyRes.headers);
+
     res.writeHead(proxyRes.statusCode as number, {
       ...proxyRes.headers,
       "access-control-allow-origin": "*",
       "access-control-allow-headers": "*",
       "access-control-allow-methods": "*",
     });
+
     proxyRes.pipe(res, { end: true });
   });
 
