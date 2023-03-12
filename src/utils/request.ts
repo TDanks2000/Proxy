@@ -23,7 +23,7 @@ interface options {
 
 export const requestHttp = (url: URL | options, options: any) => {
   if (url.protocol.toLowerCase().includes("https")) {
-    return https.request(url, { ...options });
+    return https.request(url, options);
   } else {
     return http.request(url, { ...options, agent: httpsAgent });
   }
