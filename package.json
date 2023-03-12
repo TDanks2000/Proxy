@@ -8,6 +8,7 @@
     "dev": "nodemon ./src/main.ts"
   },
   "dependencies": {
+    "agentkeepalive": "^4.3.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2"
